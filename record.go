@@ -1,10 +1,10 @@
 package gormzap
 
 import (
-	"time"
-
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"strings"
+	"time"
 )
 
 // Record is gormzap log record.
@@ -28,12 +28,30 @@ func DefaultRecordToFields(r Record) []zapcore.Field {
 
 	if r.SQL != "" {
 		return []zapcore.Field{
-			zap.String("sql.source", r.Source),
-			zap.Duration("sql.duration", r.Duration),
-			zap.String("sql.query", r.SQL),
-			zap.Int64("sql.rows_affected", r.RowsAffected),
+			zap.String("source", SimplifyCodeSource(r.Source)),
+			zap.Duration("dur", r.Duration),
+			zap.String("query", r.SQL),
+			zap.Int64("rows_affected", r.RowsAffected),
 		}
 	}
 
-	return []zapcore.Field{zap.String("sql.source", r.Source)}
+	return []zapcore.Field{zap.String("source", SimplifyCodeSource(r.Source))}
+}
+
+/*
+simplify
+/usr/local/share/GOHOME/gopath/src/zgcloud.com/backend/goim/store/reminder_store.go:35
+to
+store/reminder_store.go:35
+*/
+func SimplifyCodeSource(source string) string {
+	idx := strings.LastIndexByte(source, '/')
+	if idx == -1 {
+		return source
+	}
+	idx = strings.LastIndexByte(source[:idx], '/')
+	if idx == -1 {
+		return source
+	}
+	return source[idx+1:]
 }

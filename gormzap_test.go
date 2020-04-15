@@ -2,10 +2,10 @@ package gormzap_test
 
 import (
 	"errors"
+	"github.com/everimbaq/gormzap"
 	"testing"
 	"time"
 
-	"github.com/hypnoglow/gormzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest"
@@ -26,7 +26,7 @@ func ExampleLogger() {
 	)
 
 	// Output:
-	// {"level":"debug","msg":"gorm query","sql.source":"/foo/bar.go","sql.duration":"2s","sql.query":"SELECT * FROM foo WHERE id = 123","sql.rows_affected":2}
+	// {"level":"debug","msg":"gorm query","source":"foo/bar.go","dur":"2s","query":"SELECT * FROM foo WHERE id = 123","rows_affected":2}
 }
 
 func ExampleWithRecordToFields() {
@@ -63,7 +63,7 @@ func TestLogger_Print(t *testing.T) {
 		l, buf := logger()
 
 		l.Print("idunno")
-		expected := `{"level":"debug","msg":"idunno","sql.source":""}`
+		expected := `{"level":"debug","msg":"idunno","source":""}`
 
 		actual := buf.Lines()[0]
 		if actual != expected {
@@ -75,7 +75,7 @@ func TestLogger_Print(t *testing.T) {
 		l, buf := logger()
 
 		l.Print("/some/file.go:32", errors.New("some serious error!"))
-		expected := `{"level":"error","msg":"some serious error!","sql.source":"/some/file.go:32"}`
+		expected := `{"level":"error","msg":"some serious error!","source":"some/file.go:32"}`
 
 		actual := buf.Lines()[0]
 		if actual != expected {
@@ -91,7 +91,7 @@ func TestLogger_Print(t *testing.T) {
 			"/some/file.go:33",
 			errors.New("some serious error!"),
 		)
-		expected := `{"level":"error","msg":"some serious error!","sql.source":"/some/file.go:33"}`
+		expected := `{"level":"error","msg":"some serious error!","source":"some/file.go:33"}`
 
 		actual := buf.Lines()[0]
 		if actual != expected {
@@ -108,7 +108,7 @@ func TestLogger_Print(t *testing.T) {
 			"foo",
 			"bar",
 		)
-		expected := `{"level":"debug","msg":"foobar","sql.source":"/some/file.go:33"}`
+		expected := `{"level":"debug","msg":"foobar","source":"some/file.go:33"}`
 
 		actual := buf.Lines()[0]
 		if actual != expected {
@@ -127,7 +127,7 @@ func TestLogger_Print(t *testing.T) {
 			[]interface{}{42},
 			int64(1),
 		)
-		expected := `{"level":"debug","msg":"gorm query","sql.source":"/some/file.go:34","sql.duration":"5ms","sql.query":"SELECT * FROM test WHERE id = 42","sql.rows_affected":1}`
+		expected := `{"level":"debug","msg":"gorm query","source":"some/file.go:34","dur":"5ms","query":"SELECT * FROM test WHERE id = 42","rows_affected":1}`
 
 		actual := buf.Lines()[0]
 		if actual != expected {
@@ -151,4 +151,11 @@ func logger() (*gormzap.Logger, *zaptest.Buffer) {
 	z := zap.New(core)
 
 	return gormzap.New(z), buf
+}
+
+func TestSimplifyCodeSource(t *testing.T) {
+	trimmedPath := gormzap.SimplifyCodeSource("/usr/local/share/GOHOME/gopath/src/zgcloud.com/backend/goim/store/reminder_store.go:35")
+	if trimmedPath != "store/reminder_store.go:35" {
+		t.Fatal("func gormzap.SimplifyCodeSource failed")
+	}
 }

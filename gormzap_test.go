@@ -154,8 +154,8 @@ func logger() (*gormzap.Logger, *zaptest.Buffer) {
 }
 
 func TestSimplifyCodeSource(t *testing.T) {
-	trimmedPath := gormzap.SimplifyCodeSource("/usr/local/share/GOHOME/gopath/src/zgcloud.com/backend/goim/store/reminder_store.go:35")
+	trimmedPath := gormzap.ShortenCodeSource("/usr/local/share/GOHOME/gopath/src/zgcloud.com/backend/goim/store/reminder_store.go:35")
 	if trimmedPath != "store/reminder_store.go:35" {
-		t.Fatal("func gormzap.SimplifyCodeSource failed")
+		t.Fatal("func gormzap.ShortenCodeSource failed")
 	}
 }

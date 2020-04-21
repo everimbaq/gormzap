@@ -23,6 +23,7 @@ type Logger struct {
 	origin      *zap.Logger
 	level       zapcore.Level
 	encoderFunc RecordToFields
+	simplifyLog bool
 }
 
 // LoggerOption is an option for Logger.
@@ -63,9 +64,37 @@ func New(origin *zap.Logger, opts ...LoggerOption) *Logger {
 	return l
 }
 
+func (l *Logger) SetSimplifyLog(simplifyLog bool) {
+	l.simplifyLog = simplifyLog
+}
+
 // Print implements gorm's logger interface.
 func (l *Logger) Print(values ...interface{}) {
 	rec := l.newRecord(values...)
+	if l.simplifyLog {
+		slogger := l.origin.Sugar()
+		args := []interface{}{"code: ", rec.Source,
+			" dur: ", rec.Duration,
+			" sql:", ShortenCodeSource(rec.Source),
+			" rows:", rec.RowsAffected}
+		// simplified log
+		switch rec.Level {
+		case zap.DebugLevel:
+			slogger.Debug(args...)
+		case zap.InfoLevel:
+			slogger.Info(args...)
+		case zap.WarnLevel:
+			slogger.Warn(args...)
+		case zap.ErrorLevel:
+			slogger.Error(args...)
+		case zap.PanicLevel:
+			slogger.Panic(args...)
+		default:
+			l.origin.Check(rec.Level, rec.Message).Write(l.encoderFunc(rec)...)
+		}
+		return
+	}
+
 	l.origin.Check(rec.Level, rec.Message).Write(l.encoderFunc(rec)...)
 }
 

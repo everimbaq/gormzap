@@ -28,14 +28,14 @@ func DefaultRecordToFields(r Record) []zapcore.Field {
 
 	if r.SQL != "" {
 		return []zapcore.Field{
-			zap.String("source", SimplifyCodeSource(r.Source)),
+			zap.String("source", ShortenCodeSource(r.Source)),
 			zap.Duration("dur", r.Duration),
 			zap.String("query", r.SQL),
 			zap.Int64("rows_affected", r.RowsAffected),
 		}
 	}
 
-	return []zapcore.Field{zap.String("source", SimplifyCodeSource(r.Source))}
+	return []zapcore.Field{zap.String("source", ShortenCodeSource(r.Source))}
 }
 
 /*
@@ -44,7 +44,7 @@ simplify
 to
 store/reminder_store.go:35
 */
-func SimplifyCodeSource(source string) string {
+func ShortenCodeSource(source string) string {
 	idx := strings.LastIndexByte(source, '/')
 	if idx == -1 {
 		return source

@@ -72,26 +72,12 @@ func (l *Logger) SetSimplifyLog(simplifyLog bool) {
 func (l *Logger) Print(values ...interface{}) {
 	rec := l.newRecord(values...)
 	if l.simplifyLog {
-		slogger := l.origin.Sugar()
-		args := []interface{}{"code: ", rec.Source,
+		args := []interface{}{
+			"code: ", ShortenCodeSource(rec.Source),
 			" dur: ", rec.Duration,
-			" sql:", ShortenCodeSource(rec.Source),
+			" sql:", rec.SQL,
 			" rows:", rec.RowsAffected}
-		// simplified log
-		switch rec.Level {
-		case zap.DebugLevel:
-			slogger.Debug(args...)
-		case zap.InfoLevel:
-			slogger.Info(args...)
-		case zap.WarnLevel:
-			slogger.Warn(args...)
-		case zap.ErrorLevel:
-			slogger.Error(args...)
-		case zap.PanicLevel:
-			slogger.Panic(args...)
-		default:
-			l.origin.Check(rec.Level, rec.Message).Write(l.encoderFunc(rec)...)
-		}
+		l.origin.Sugar().Debug(args...)
 		return
 	}
 

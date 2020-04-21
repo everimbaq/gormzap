@@ -73,8 +73,8 @@ func (l *Logger) Print(values ...interface{}) {
 	rec := l.newRecord(values...)
 	if l.simplifyLog {
 		args := []interface{}{
-			"code: ", ShortenCodeSource(rec.Source),
-			" dur: ", rec.Duration,
+			ShortenCodeSource(rec.Source),
+			" dur:", rec.Duration,
 			" sql:", rec.SQL,
 			" rows:", rec.RowsAffected}
 		l.origin.Sugar().Debug(args...)

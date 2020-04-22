@@ -20,13 +20,13 @@ func ExampleLogger() {
 		"sql",
 		"/foo/bar.go",
 		time.Second*2,
-		"SELECT * FROM foo WHERE id = ?",
-		[]interface{}{123},
+		"SELECT * FROM foo WHERE id = ? and name = ? and isbool = ?",
+		[]interface{}{123, "lily", true},
 		int64(2),
 	)
 
 	// Output:
-	// {"level":"debug","msg":"gorm query","source":"foo/bar.go","dur":"2s","query":"SELECT * FROM foo WHERE id = 123","rows_affected":2}
+	// {"level":"debug","msg":"gorm query","source":"foo/bar.go","dur":"2s","query":"SELECT * FROM foo WHERE id = 123 and name = lily and isbool = true","rows_affected":2}
 }
 
 func ExampleWithRecordToFields() {

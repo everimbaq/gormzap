@@ -146,24 +146,28 @@ func (l *Logger) newRecord(values ...interface{}) Record {
 }
 
 func formatSQL(sql string, values []interface{}) string {
-	size := len(values)
 
-	replacements := make([]string, size*2)
-
-	var indexFunc func(int) string
 	if strings.Contains(sql, "$1") {
+		size := len(values)
+		replacements := make([]string, size*2)
+		var indexFunc func(int) string
 		indexFunc = formatNumbered
+		for i := size - 1; i >= 0; i-- {
+			replacements[(size-i-1)*2] = indexFunc(i)
+			replacements[(size-i-1)*2+1] = formatValue(values[i])
+		}
+		r := strings.NewReplacer(replacements...)
+		return r.Replace(sql)
 	} else {
-		indexFunc = formatQuestioned
+		// sql format
+		// SELECT * FROM `reminders`  WHERE (remind_at_minute = ? and is_active = ?)[26458907 true]
+		for _, v := range values {
+			vs := fmt.Sprintf("%v", v)
+			sql = strings.Replace(sql, "?", vs, 1)
+		}
+		return sql
 	}
 
-	for i := size - 1; i >= 0; i-- {
-		replacements[(size-i-1)*2] = indexFunc(i)
-		replacements[(size-i-1)*2+1] = formatValue(values[i])
-	}
-
-	r := strings.NewReplacer(replacements...)
-	return r.Replace(sql)
 }
 
 func formatNumbered(index int) string {
